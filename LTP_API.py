@@ -209,6 +209,6 @@ if __name__ == '__main__':
     dic_path = r'C:\Users\kangwen\PycharmProjects\EventExtract\wanfangzhaiyao'
 #    a = TextAnalysisByLTP(sys.argv[1])
 #    a.process(sys.argv[2])
-    a = TextAnalysisByLTP(file_path, dir_path_flag=False)
+    a = TextAnalysisByLTP('testfile', dir_path_flag=False)
     a.process('dp', output_count=True)
 
