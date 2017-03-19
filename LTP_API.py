@@ -36,7 +36,7 @@ class TextAnalysisByLTP:
 
     @staticmethod
     def readfile(path):
-        with open(path, 'r', encoding='utf-8') as f:
+        with open(path, 'r', encoding='utf-8_sig') as f:
             file = f.readlines()
         return file
 
@@ -98,9 +98,13 @@ class TextAnalysisByLTP:
 
     def __dp(self, line_json):
         for word in line_json:
+            id = word['id']
             cont = word['cont']
             pos = word['pos']
+            parent = word['parent']
+            relate = word['relate']
             print(word)
+
             if word['relate'] == 'HED':
                 self.hed.append(word['cont'])
 
@@ -122,6 +126,72 @@ class TextAnalysisByLTP:
         count_seq = sorted(word_freq.items(), key=lambda d: d[1], reverse=True)
         self.__writefile(str(count_seq), pattern, count_flag=True)
         return dict(word_freq.items())
+
+    def __event(self,line_json):
+        event={}
+        #查找核心词，即事件谓语
+        for word in line_json:
+            if word['relate'] == 'HED' and word['pos'] == 'v':
+                event['predicate'] = word['cont']
+                pid = word['id']
+        #查找主语和宾语
+        for word in line_json:
+            if word['parent'] == pid:
+                if word['relate'] == 'SBV':
+                    if word['pos'] == 'v':
+                        #主语为事件
+                        sbid = word['id']
+                        sbevent = {}
+                        sbevent['predicate'] = word['cont']
+                        for word1 in line_json:
+                            if word1['parent'] == sbid and word1['relate'] == 'ADV' and word1['cont'] == '别':
+                                sbevent['predicate'] = word1['cont']+word['cont']
+                        for word1 in line_json:
+                            if word1['parent'] == sbid:
+                                if word1['relate'] == 'SBV':
+                                    sbevent['subject'] = word1['cont']
+                                elif word1['relate'] == 'VOB':
+                                    sbevent['object'] = word1['cont']
+                        event['subject'] = sbevent
+                    else:
+                        event['subject'] = word['cont']
+                elif word['relate'] == 'VOB':
+                    if word['pos'] == 'v':
+                        #宾语为事件
+                        obid = word['id']
+                        obevent = {}
+                        obevent['predicate'] = word['cont']
+                        for word1 in line_json:
+                            if word1['parent'] == obid and word1['relate'] == 'ADV' and word1['cont'] == '别':
+                                obevent['predicate'] = word1['cont'] + word['cont']
+                        for word2 in line_json:
+                            if word2['parent'] == obid:
+                                if word2['relate'] == 'SBV':
+                                    obevent['subject'] = word2['cont']
+                                elif word2['relate'] == 'VOB':
+                                    obevent['object'] = word2['cont']
+                        event['object'] = obevent
+                    else:
+                        event['object'] = word['cont']
+        print(event)
+
+    def __getATT(self,word,line_json,strATT):
+        id = word['id']
+        for word1 in  line_json:
+            if word1['parent'] == id and word1['realte'] == 'ATT':
+                strATT += word1['cont']
+            else:
+                strATT = ''
+        return strATT
+
+
+
+
+
+
+
+
+
 
     def process(self, pattern, output_count=True):
         count_list = []
@@ -177,6 +247,7 @@ class TextAnalysisByLTP:
                 if code == 200:
                     self.process_count += 1
                     line_json = json.loads(result)[0][0]
+                   # print(line_json)
                     if pattern == 'ws':
                         sentence_token = self.__ws(line_json)
                     elif pattern == 'pos':
@@ -187,6 +258,8 @@ class TextAnalysisByLTP:
                         self.__dp(line_json)
                         print('Success prcoessing', str(self.process_count), 'sentence.   ', 'Fail', str(self.fail_count),
                               'sentence')
+                        #事件抽取
+                        self.__event(line_json)
                         continue
                     else:
                         return -1
