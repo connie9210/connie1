@@ -156,9 +156,11 @@ class TextAnalysisByLTP:
                                     if word_sbv_sbv['parent'] == sbid:
                                         if word_sbv_sbv['relate'] == 'SBV':
                                             sbevent['subject'] = word_sbv_sbv['cont']
+                                            str_att = ''
                                             for word_att in line_json:
                                                 if word_att['parent'] == word_sbv_sbv['id'] and word_att['relate'] == 'ATT':
-                                                    sbevent['subject'] = word_att['cont'] + sbevent['subject']
+                                                    str_att += word_att['cont']
+                                            sbevent['subject'] = str_att + sbevent['subject']
                                 for word_sbv_p_coo in line_json:
                                     if word_sbv_p_coo['relate'] == 'COO' and word_sbv_p_coo['parent'] == sbid:
                                         sbevent['predicate'] = word_sbv['cont'] + word_sbv_p_coo['cont']
@@ -169,16 +171,20 @@ class TextAnalysisByLTP:
                                     if word_sbv_vob['parent'] == sbid:
                                         if word_sbv_vob['relate'] == 'VOB':
                                             sbevent['object'] = word_sbv_vob['cont']
+                                            str_att = ''
                                             for word_att in line_json:
                                                 if word_att['parent'] == word_sbv_vob['id'] and word_att['relate'] == 'ATT':
-                                                    sbevent['object'] = word_att['cont'] + sbevent['object']
+                                                    str_att += word_att['cont']
+                                            sbevent['object'] = str_att + sbevent['object']
                                 event['subject'] = sbevent
                             #主语
                             else:
                                 event['subject'] = word_sbv['cont']
+                                str_att=''
                                 for word_att in line_json:
                                    if word_att['parent'] == word_sbv['id'] and word_att['relate'] == 'ATT':
-                                       event['subject'] = word_att['cont'] + event['subject']
+                                       str_att += word_att['cont']
+                                event['subject'] =str_att + event['subject']
 
                 #考虑coo
                 for word_hed_coo in line_json:
@@ -206,9 +212,11 @@ class TextAnalysisByLTP:
                                     if word_vob_sbv['parent'] == obid:
                                         if word_vob_sbv['relate'] == 'SBV':
                                             obevent['subject'] = word_vob_sbv['cont']
+                                            str_att = ''
                                             for word_att in line_json:
                                                 if word_att['parent'] == word_vob_sbv['id'] and word_att['relate'] == 'ATT':
-                                                    obevent['subject'] = word_att['cont'] + obevent['subject']
+                                                    str_att += word_att['cont']
+                                            obevent['subject'] = str_att + obevent['subject']
                                 for word_vob_p_coo in line_json:
                                     if word_vob_p_coo['relate'] == 'COO' and word_vob_p_coo['parent'] == obid:
                                         obevent['predicate'] = word_vob['cont'] + word_vob_p_coo['cont']
@@ -218,36 +226,20 @@ class TextAnalysisByLTP:
                                     if word_vob_vob['parent'] == obid:
                                         if word_vob_vob['relate'] == 'VOB':
                                             obevent['object'] = word_vob_vob['cont']
+                                            str_att = ''
                                             for word_att in line_json:
                                                 if word_att['parent'] == word_vob_vob['id'] and word_att['relate'] == 'ATT':
-                                                    obevent['object'] = word_att['cont'] + obevent['object']
+                                                    str_att += word_att['cont']
+                                            obevent['object'] = str_att + obevent['object']
                                 event['object'] = obevent
                             else:
                                 event['object'] = word_vob['cont']
                                 for word_att in line_json:
+                                    str_att = ''
                                     if word_att['parent'] == word_vob['id'] and word_att['relate'] == 'ATT':
-                                        event['object'] = word_att['cont'] + event['object']
+                                        str_att += word_att['cont']
+                                        event['object'] = str_att + event['object']
         print(event)
-
-
-
-    def __getATT(self,word,line_json,strATT):
-        id = word['id']
-        flag = 0
-        for word1 in  line_json:
-            if word1['parent'] == id and word1['realte'] == 'ATT':
-                flag = 1
-                strATT += word1['cont']
-        if flag == 1:
-            return strATT
-
-
-
-
-
-
-
-
 
 
 
