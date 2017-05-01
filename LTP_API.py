@@ -186,12 +186,7 @@ class TextAnalysisByLTP:
                                        str_att += word_att['cont']
                                 event['subject'] =str_att + event['subject']
 
-                #考虑coo
-                for word_hed_coo in line_json:
-                    if word_hed_coo['relate'] == 'COO' and word_hed_coo['parent'] == pid:
-                        event['predicate'] = word_hed['cont']+word_hed_coo['cont']
-                        pid = word_hed_coo['id']
-                        print(pid)
+
                 #查找宾语
                 for word_vob in line_json:
                     if word_vob['parent'] == pid:
@@ -231,6 +226,10 @@ class TextAnalysisByLTP:
                                                 if word_att['parent'] == word_vob_vob['id'] and word_att['relate'] == 'ATT':
                                                     str_att += word_att['cont']
                                             obevent['object'] = str_att + obevent['object']
+                                if ('object' not in obevent.keys()):
+                                    for word_pob in line_json:
+                                        if word_pob['relate'] == 'POB':
+                                            obevent['object'] = word_pob['cont']
                                 event['object'] = obevent
                             else:
                                 event['object'] = word_vob['cont']
@@ -239,6 +238,139 @@ class TextAnalysisByLTP:
                                     if word_att['parent'] == word_vob['id'] and word_att['relate'] == 'ATT':
                                         str_att += word_att['cont']
                                         event['object'] = str_att + event['object']
+                #考虑coo
+                for word_hed_coo in line_json:
+                    if word_hed_coo['relate'] == 'COO' and word_hed_coo['parent'] == pid:
+                        if ('object' not in event.keys()):
+                            print("hello")
+                            event['predicate'] = word_hed['cont']+word_hed_coo['cont']
+                            pid = word_hed_coo['id']
+                            print(pid)
+                            # 查找宾语
+                            for word_vob in line_json:
+                                if word_vob['parent'] == pid:
+                                    if word_vob['relate'] == 'VOB':
+                                        #print(word_vob['cont'])
+                                        # 宾语为事件
+                                        if word_vob['pos'] == 'v':
+                                            # 考虑兼语，作为嵌套事件的主语
+                                            obid = word_vob['id']
+                                            obevent = {}
+                                            obevent['predicate'] = word_vob['cont']
+                                            for word_ng in line_json:
+                                                if word_ng['parent'] == pid and word_ng['relate'] == 'DBL':
+                                                    obevent['subject'] = word_ng['cont']
+                                                if word_ng['parent'] == obid and word_ng['relate'] == 'ADV' and word_ng[
+                                                    'cont'] == '别':
+                                                    obevent['predicate'] = word_ng['cont'] + word_vob['cont']
+                                                    # 查找嵌套事件主语
+                                            for word_vob_sbv in line_json:
+                                                if word_vob_sbv['parent'] == obid:
+                                                    if word_vob_sbv['relate'] == 'SBV':
+                                                        obevent['subject'] = word_vob_sbv['cont']
+                                                        str_att = ''
+                                                        for word_att in line_json:
+                                                            if word_att['parent'] == word_vob_sbv['id'] and word_att[
+                                                                'relate'] == 'ATT':
+                                                                str_att += word_att['cont']
+                                                        obevent['subject'] = str_att + obevent['subject']
+                                            for word_vob_p_coo in line_json:
+                                                if word_vob_p_coo['relate'] == 'COO' and word_vob_p_coo[
+                                                    'parent'] == obid:
+                                                    obevent['predicate'] = word_vob['cont'] + word_vob_p_coo['cont']
+                                                    obid = word_vob_p_coo['id']
+                                                    # 查找嵌套事件宾语
+                                            for word_vob_vob in line_json:
+                                                if word_vob_vob['parent'] == obid:
+                                                    if word_vob_vob['relate'] == 'VOB':
+                                                        obevent['object'] = word_vob_vob['cont']
+                                                        str_att = ''
+                                                        for word_att in line_json:
+                                                            if word_att['parent'] == word_vob_vob['id'] and word_att[
+                                                                'relate'] == 'ATT':
+                                                                str_att += word_att['cont']
+                                                        obevent['object'] = str_att + obevent['object']
+                                            if ('object' not in obevent.keys()):
+                                                for word_pob in line_json:
+                                                    if word_pob['relate'] == 'POB':
+                                                        obevent['object'] = word_pob['cont']
+                                            event['object'] = obevent
+                                        else:
+                                            event['object'] = word_vob['cont']
+                                            for word_att in line_json:
+                                                str_att = ''
+                                                if word_att['parent'] == word_vob['id'] and word_att['relate'] == 'ATT':
+                                                    str_att += word_att['cont']
+                                                    event['object'] = str_att + event['object']
+                        else:
+                            event['predicate1'] = word_hed_coo['cont']
+                            pid = word_hed_coo['id']
+                            #查找主语
+                            for word_vob in line_json:
+                                if word_vob['parent'] == pid:
+                                    if word_vob['relate'] == 'SBV':
+                                        event['subject1'] = word_vob['cont']
+
+                            # 查找宾语
+                            for word_vob in line_json:
+                                if word_vob['parent'] == pid:
+                                    if word_vob['relate'] == 'VOB':
+                                        # 宾语为事件
+                                        if word_vob['pos'] == 'v':
+                                            # 考虑兼语，作为嵌套事件的主语
+                                            obid = word_vob['id']
+                                            obevent = {}
+                                            obevent['predicate'] = word_vob['cont']
+                                            for word_ng in line_json:
+                                                if word_ng['parent'] == pid and word_ng['relate'] == 'DBL':
+                                                    obevent['subject'] = word_ng['cont']
+                                                if word_ng['parent'] == obid and word_ng['relate'] == 'ADV' and word_ng[
+                                                    'cont'] == '别':
+                                                    obevent['predicate'] = word_ng['cont'] + word_vob['cont']
+                                                    # 查找嵌套事件主语
+                                            for word_vob_sbv in line_json:
+                                                if word_vob_sbv['parent'] == obid:
+                                                    if word_vob_sbv['relate'] == 'SBV':
+                                                        obevent['subject'] = word_vob_sbv['cont']
+                                                        str_att = ''
+                                                        for word_att in line_json:
+                                                            if word_att['parent'] == word_vob_sbv['id'] and word_att[
+                                                                'relate'] == 'ATT':
+                                                                str_att += word_att['cont']
+                                                        obevent['subject'] = str_att + obevent['subject']
+                                            for word_vob_p_coo in line_json:
+                                                if word_vob_p_coo['relate'] == 'COO' and word_vob_p_coo[
+                                                    'parent'] == obid:
+                                                    obevent['predicate'] = word_vob['cont'] + word_vob_p_coo['cont']
+                                                    obid = word_vob_p_coo['id']
+                                                    # 查找嵌套事件宾语
+                                            for word_vob_vob in line_json:
+                                                if word_vob_vob['parent'] == obid:
+                                                    if word_vob_vob['relate'] == 'VOB':
+                                                        obevent['object'] = word_vob_vob['cont']
+                                                        str_att = ''
+                                                        for word_att in line_json:
+                                                            if word_att['parent'] == word_vob_vob['id'] and word_att[
+                                                                'relate'] == 'ATT':
+                                                                str_att += word_att['cont']
+                                                        obevent['object'] = str_att + obevent['object']
+                                            if ('object' not in obevent.keys()):
+                                                for word_pob in line_json:
+                                                    if word_pob['relate'] == 'POB':
+                                                        obevent['object'] = word_pob['cont']
+                                            event['object1'] = obevent
+                                        else:
+                                            event['object1'] = word_vob['cont']
+                                            for word_att in line_json:
+                                                str_att = ''
+                                                if word_att['parent'] == word_vob['id'] and word_att['relate'] == 'ATT':
+                                                    str_att += word_att['cont']
+                                                    event['object1'] = str_att + event['object1']
+
+                if ('object' not in event.keys()):
+                    for word_pob in line_json:
+                        if word_pob['relate'] == 'POB':
+                            event['object'] = word_pob['cont']
         print(event)
 
 
@@ -287,8 +419,8 @@ class TextAnalysisByLTP:
                     processed_sent.append('\n')
                     continue
                 try_count += 1
-                line = self.__del_semicolon(line)
-                line = self.__del_punc(line)
+               # line = self.__del_semicolon(line)
+               # line = self.__del_punc(line)
                 result, code = self.get(line, pattern)
                 print(code)
                 while code == 503:
